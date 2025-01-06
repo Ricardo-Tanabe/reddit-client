@@ -1,0 +1,24 @@
+{
+  "name": "19-reddit-client",
+  "version": "1.0.0",
+  "description": "O projeto é destinado a criação de um aplicativo web que exibe múltiplos subreddits em colunas separadas e personalizáveis.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --progress --mode=production",  
+    "watch": "webpack --progress --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "babel-loader": "^9.2.1",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "marked": "^15.0.5"
+  }
+}

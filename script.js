@@ -1,3 +1,5 @@
+import { marked } from 'marked';
+
 const container = document.querySelector('.container')
 
 async function getSubreddit(subreddit) {
@@ -19,12 +21,19 @@ async function getSubreddit(subreddit) {
     }
 }
 
+function decodeHTMLEntities(text) {
+    const tempElemnt = document.createElement('textarea');
+    tempElemnt.innerHTML = text;
+    return tempElemnt.value;
+}
+
 function createInnerContent(selftext, titleTxt, authorTxt, num_comments) {
     const title = document.createElement('h3')
     const post = document.createElement('p')
     const info = document.createElement('p')
     const author = document.createElement('span')
     const vote = document.createElement('span')
+    const decodedText = decodeHTMLEntities(`${selftext}`)
 
     title.className = 'title';
     post.className = 'post';
@@ -33,7 +42,7 @@ function createInnerContent(selftext, titleTxt, authorTxt, num_comments) {
     vote.className = 'vote';
 
     title.innerHTML = titleTxt;
-    post.innerHTML = `${selftext}`;
+    post.innerHTML = marked(decodedText);
     author.innerHTML = 'author: ' + authorTxt + ',';
     vote.innerHTML = 'number of comments: ' + num_comments
 

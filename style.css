@@ -3,6 +3,13 @@
     border-radius: 15px;
 }
 
+.adjust {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .subreddit {
     border: none;
     padding: 5px;
