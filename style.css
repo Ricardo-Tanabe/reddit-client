@@ -1,13 +1,137 @@
 .container {
-    border: 1px solid black;
+    display: flex;
+    flex-direction: row;
+    white-space: nowrap;
+    /* border: 1px solid black; */
+    /* border-radius: 15px; */
+}
+
+div + div {
+    border-left: 1px solid black;
+} 
+
+.add-subreddit > div {
+    flex-shrink: 0;
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    border-radius: 50%;
+    margin: 10px;
+    position: relative;
+    text-align: center;
+    line-height: 50px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.add-subreddit > div::before {
+    content: '+';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.add-subreddit > div:hover  {
+    border-color: gray;
+    color: gray;
+    cursor: pointer;
+}
+
+.popup-load {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    width: 300px;
+    height: 150px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgb(200, 200, 200);
     border-radius: 15px;
 }
 
+.popup-load {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+}
+
+.popup {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 15px;
+}
+
+.popup  * {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    background: none;
+    width: 100%;
+    height: 100%;
+    margin: 10px;
+}
+
+.popup > h3 {
+    text-align: center;
+}
+
+.popup > div {
+    border: 1px solid black;
+    border-radius: 5px;
+    width: 80%;
+}
+
+.popup > button {
+    border: 1px solid black;
+    border-radius: 5px;
+    background-color: black;
+    color: white;
+    width: 80%;
+    padding: 5px;
+}
+
 .adjust {
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+}
+
+.option {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    top: 25px;
+    right: 0px;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.option span:hover {
+    text-decoration: underline blue;
+    color: blue;
+    cursor: pointer;
 }
 
 .subreddit {
@@ -30,6 +154,7 @@
     padding: 0;
     color: blue;
     cursor: pointer;
+    white-space: wrap;
 }
 
 .post {
@@ -38,6 +163,7 @@
     border: 1px solid black;
     background-color: rgb(240, 240, 240);
     border-radius: 8px;
+    white-space: wrap;
 }
 
 .info {
