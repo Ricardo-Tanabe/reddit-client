@@ -5,64 +5,37 @@ const addNewLanguage = document.querySelector('.add-subreddit > div');
 const popup = document.querySelector('.popup');
 const loadScreen = document.querySelector('.popup-load');
 const htmlText = `<div class="subreddit adjust"><span></span><span><img src="./more.png" alt="icone de três pontos"></span><div class="option"><span>Refresh</span><span>Delete</span></div></div>`;
-let subredditSelect = null;
+const state = {
+    load: {text: `Loading ${undefined} subreddit...`, bg: 'rgb(200, 200, 200)'},
+    sucess: {text: `${undefined} subreddit found`, bg: 'rgb(180, 255, 180)'},
+    error: {text: `Resource ${undefined} not found`, bg: 'rgb(255, 180, 180)'},
+    langExist: {text: `Resource ${undefined} existe`, bg: 'rgb(200, 200, 200)'}
+};
+let subredditSelect = [];
 
 async function getSubreddit(subreddit) {
     const url = `https://www.reddit.com/r/${subreddit}.json`;
-    loadStyle(subreddit);
+    statusWarning(subreddit, state.load);
     try {
         const response = await fetch(url);
         if(!response.ok){
-            if (response.status === 404) {
-                console.error('Recurso não encontrado (404).');
-            } else if (response.status === 302) {
-                console.error('Redirecionamento encontrado (302).');
-            } else {
-                console.error(`Erro HTTP! status: ${response.status}`);
-            }
-            errorStyle(subreddit);
+            statusWarning(subreddit, state.error);
             return;
         }
         const subPack = await response.json();
         const dataList = subPack.data.children;
-        createNewContent(subreddit);
-        for(let i = 0; i < dataList.length; i++) {
-            const {selftext, title, author, num_comments} = dataList[i].data;
-            createSubreddit(subreddit, selftext, title, author, num_comments);
-        }
-        sucessStyle(subreddit);
+        createSubredditColumn(subreddit, dataList)
+        statusWarning(subreddit, state.sucess);
     } catch (error) {
-        if (error.message.includes('CORS')) {
-            console.error('Erro de CORS. Verifique as configurações do servidor.');
-        } else {
-            console.error('Ocorreu um erro:', error);
-        }
-        errorStyle(subreddit);
+        statusWarning(subreddit, state.error);
     }
 }
 
-function loadStyle(subreddit) {
+function statusWarning(subreddit, state) {
     const name = subreddit.charAt(0).toUpperCase() + subreddit.slice(1);
-    loadScreen.children[0].innerHTML = `Loading ${name} subreddit...`;
-    loadScreen.style.backgroundColor = 'rgb(200, 200, 200)';
-    setTimeout(() => {
-        loadScreen.style.display = 'none';
-    }, 2000);
-}
-
-function sucessStyle(subreddit) {
-    const name = subreddit.charAt(0).toUpperCase() + subreddit.slice(1);
-    loadScreen.children[0].innerHTML = `${name} subreddit found`;
-    loadScreen.style.backgroundColor = 'rgb(180, 255, 180)';
-    setTimeout(() => {
-        loadScreen.style.display = 'none';
-    }, 2000);
-}
-
-function errorStyle(subreddit) {
-    const name = subreddit;
-    loadScreen.children[0].innerHTML = `Resource ${name} not found`;
-    loadScreen.style.backgroundColor = 'rgb(255, 180, 180)';
+    const updatedMessage = state.text.replace('undefined', name);
+    loadScreen.children[0].innerHTML = updatedMessage;
+    loadScreen.style.backgroundColor = state.bg;
     setTimeout(() => {
         loadScreen.style.display = 'none';
     }, 2000);
@@ -71,16 +44,15 @@ function errorStyle(subreddit) {
 function decodeHTMLEntities(text) {
     const tempElemnt = document.createElement('textarea');
     tempElemnt.innerHTML = text;
-    return tempElemnt.value;
+    return marked(tempElemnt.value);
 }
 
 function createInnerContent(selftext, titleTxt, authorTxt, num_comments) {
-    const title = document.createElement('h3')
-    const post = document.createElement('p')
-    const info = document.createElement('p')
-    const author = document.createElement('span')
-    const vote = document.createElement('span')
-    const decodedText = decodeHTMLEntities(`${selftext}`)
+    const title = document.createElement('h3');
+    const post = document.createElement('p');
+    const info = document.createElement('p');
+    const author = document.createElement('span');
+    const vote = document.createElement('span');
 
     title.className = 'title';
     post.className = 'post';
@@ -89,9 +61,9 @@ function createInnerContent(selftext, titleTxt, authorTxt, num_comments) {
     vote.className = 'vote';
 
     title.innerHTML = titleTxt;
-    post.innerHTML = marked(decodedText);
+    post.innerHTML = decodeHTMLEntities(`${selftext}`);
     author.innerHTML = 'author: ' + authorTxt + ',';
-    vote.innerHTML = 'number of comments: ' + num_comments
+    vote.innerHTML = 'number of comments: ' + num_comments;
 
     info.appendChild(author);
     info.appendChild(vote)
@@ -113,6 +85,13 @@ function createSubreddit(language, selftext, titleTxt, authorTxt, num_comments) 
     languageContainer.appendChild(newSubreddit);
 }
 
+function createSubredditLanes(subreddit, dataList) {
+    for(let i = 0; i < dataList.length; i++) {
+        const {selftext, title, author, num_comments} = dataList[i].data;
+        createSubreddit(subreddit, selftext, title, author, num_comments);
+    }
+}
+
 function createNewContent(language) {
     const newContainerLanguage = document.createElement('div');
     newContainerLanguage.id = language;
@@ -122,57 +101,66 @@ function createNewContent(language) {
     container.appendChild(newContainerLanguage);
 }
 
+function createSubredditColumn(subreddit, dataList) {
+    const subredditExists = container.querySelector(`#${subreddit}`);
+    if (!subredditExists) {
+        createNewContent(subreddit);
+    }
+    createSubredditLanes(subreddit, dataList);
+}
+
 function searchSubreddit() {
     const input = popup.children[1].children[0];
     loadScreen.style.display = 'flex';
     popup.style.display = 'none';
-    getSubreddit(input.value);
+    const subredditExists = container.querySelector(`#${input.value}`)
+    const lowerCaseLanguage = input.value.toLowerCase();
+    if (!subredditExists) getSubreddit(lowerCaseLanguage);
+    else statusWarning(input.value, state.langExist);
     input.value = '';
 }
 
-function existSibling() {
-    const target = document.querySelector('.add-subreddit');
-    if(target.nextElementSibling) {
-        return true;
-    }
-    return false;
+function insertSubredditName() {
+    const input = popup.children[1].children[0];
+    popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    input.value = '';
+    input.focus();
 }
 
 document.addEventListener('click', (e) => {
-    subredditSelect = document.querySelectorAll('.option span')
+    subredditSelect = document.querySelectorAll('.option span');
 
     if(e.target === addNewLanguage && loadScreen.style.display === 'none') {
-        const input = popup.children[1].children[0];
-        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
-        input.value = '';
-        input.focus();
+        insertSubredditName()
     }
 
     if(e.target === popup.children[2] && loadScreen.style.display === 'none') {
         searchSubreddit();
-        if(existSibling()) {
-            const option = document.querySelector('.option');
-            refreshSubreddit = option.children[0];
-            deleteSubreddit = option.children[1];
-        }
     }
-    
+
     if(subredditSelect.length > 0) {
         let encontrado = false;
         subredditSelect.forEach(option => {
+            const parent = option.parentElement;
             if(encontrado) return;
+
             if(e.target.parentElement.nextElementSibling === option.parentElement) {
-                const parent = option.parentElement;
                 option.parentElement.style.display = parent.style.display === 'flex' ? 'none' : 'flex';
                 encontrado = true;
             }
 
-            if(option.innerHTML === 'Refresh' && e.target === option) {
-                console.log(option)
-                // Inserir a lógica do refresh
-            } else if(option.innerHTML === 'Delete' && e.target === option) {
-                console.log(option)
-                // Inserir a lógica do delete
+            if(e.target === option) {
+                const parentDiv = e.target.closest('div[id]');
+                if(parentDiv) {
+                    option.parentElement.style.display = parent.style.display === 'flex' ? 'none' : 'flex';
+                    const languageSelected = parentDiv.id;
+                    while(parentDiv.children.length > 1) {
+                        parentDiv.removeChild(parentDiv.lastChild);
+                    }
+                    if(option.innerHTML === 'Refresh') {
+                        getSubreddit(languageSelected)
+                    }
+                }
             }
         })
     }
