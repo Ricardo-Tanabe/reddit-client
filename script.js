@@ -1,33 +1,40 @@
 import { marked } from 'marked';
 
 const container = document.querySelector('.container');
-const addNewLanguage = document.querySelector('.add-subreddit > div');
+const addNewLanguage = document.querySelector('.circle');
+const clearLocalStorage = document.querySelector('.reset');
 const popup = document.querySelector('.popup');
 const loadScreen = document.querySelector('.popup-load');
 const htmlText = `<div class="subreddit adjust"><span></span><span><img src="./more.png" alt="icone de três pontos"></span><div class="option"><span>Refresh</span><span>Delete</span></div></div>`;
+let languagesList = {}
 const state = {
     load: {text: `Loading ${undefined} subreddit...`, bg: 'rgb(200, 200, 200)'},
     sucess: {text: `${undefined} subreddit found`, bg: 'rgb(180, 255, 180)'},
     error: {text: `Resource ${undefined} not found`, bg: 'rgb(255, 180, 180)'},
-    langExist: {text: `Resource ${undefined} existe`, bg: 'rgb(200, 200, 200)'}
+    langExist: {text: `Resource ${undefined} exist`, bg: 'rgb(200, 200, 200)'},
+    delete: {text: `${undefined} subreddit loaded`, bg: 'rgb(180, 255, 180)'}
 };
 let subredditSelect = [];
 
 async function getSubreddit(subreddit) {
     const url = `https://www.reddit.com/r/${subreddit}.json`;
-    statusWarning(subreddit, state.load);
+    await statusWarning(subreddit, state.load);
     try {
         const response = await fetch(url);
         if(!response.ok){
-            statusWarning(subreddit, state.error);
+            await statusWarning(subreddit, state.error);
             return;
         }
         const subPack = await response.json();
         const dataList = subPack.data.children;
+        if(!(subreddit in languagesList)) {
+            languagesList[`${subreddit}`] = {delete: false}
+            saveChange()
+        }
         createSubredditColumn(subreddit, dataList)
-        statusWarning(subreddit, state.sucess);
+        await statusWarning(subreddit, state.sucess);
     } catch (error) {
-        statusWarning(subreddit, state.error);
+        await statusWarning(subreddit, state.error);
     }
 }
 
@@ -36,9 +43,13 @@ function statusWarning(subreddit, state) {
     const updatedMessage = state.text.replace('undefined', name);
     loadScreen.children[0].innerHTML = updatedMessage;
     loadScreen.style.backgroundColor = state.bg;
-    setTimeout(() => {
-        loadScreen.style.display = 'none';
-    }, 2000);
+    loadScreen.style.display = 'flex';
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            loadScreen.style.display = 'none';
+            resolve();
+        }, 2000);
+    });
 }
 
 function decodeHTMLEntities(text) {
@@ -111,7 +122,6 @@ function createSubredditColumn(subreddit, dataList) {
 
 function searchSubreddit() {
     const input = popup.children[1].children[0];
-    loadScreen.style.display = 'flex';
     popup.style.display = 'none';
     const subredditExists = container.querySelector(`#${input.value}`)
     const lowerCaseLanguage = input.value.toLowerCase();
@@ -125,6 +135,27 @@ function insertSubredditName() {
     popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
     input.value = '';
     input.focus();
+}
+
+function saveChange() {
+    let languageListString = JSON.stringify(languagesList);
+    localStorage.setItem('languageListkey', languageListString);
+}
+
+async function loadChange() {
+    if(localStorage.getItem('languageListkey') !== null) {
+        let languageListString = localStorage.getItem('languageListkey')
+        languagesList = JSON.parse(languageListString)
+        for (const key in languagesList) {
+            if(languagesList[key].delete) {
+                await statusWarning(key, state.load);
+                createNewContent(key)
+                await statusWarning(key, state.delete);
+            } else {
+                await getSubreddit(key);
+            }
+        }
+    }
 }
 
 document.addEventListener('click', (e) => {
@@ -155,16 +186,23 @@ document.addEventListener('click', (e) => {
                     option.parentElement.style.display = parent.style.display === 'flex' ? 'none' : 'flex';
                     const languageSelected = parentDiv.id;
                     while(parentDiv.children.length > 1) {
+                        languagesList[`${languageSelected}`].delete = true;
                         parentDiv.removeChild(parentDiv.lastChild);
                     }
                     if(option.innerHTML === 'Refresh') {
+                        languagesList[`${languageSelected}`].delete = false;
                         getSubreddit(languageSelected)
                     }
+                    saveChange()
                 }
             }
         })
     }
 
+    if(e.target === clearLocalStorage) {
+        localStorage.clear(); // Usado para limpar o cache
+        location.reload(); // Atualiza a página
+    }
 })
 
 document.addEventListener('keydown', (e) => {
@@ -175,9 +213,11 @@ document.addEventListener('keydown', (e) => {
             popup.style.display = 'none';
         }
     }
+    saveChange();
 })
 
 document.addEventListener('DOMContentLoaded', () => {
     loadScreen.style.display = 'none';
     popup.style.display = 'none';
+    loadChange();
 })
