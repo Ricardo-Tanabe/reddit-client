@@ -8,7 +8,12 @@ div + div {
     border-left: 1px solid black;
 } 
 
-.add-subreddit > div {
+.add-subreddit {
+    display: flex;
+    flex-direction: column;
+}
+
+.circle {
     flex-shrink: 0;
     display: inline-block;
     width: 50px;
@@ -23,7 +28,7 @@ div + div {
     font-weight: bold;
 }
 
-.add-subreddit > div::before {
+.circle::before {
     content: '+';
     position: absolute;
     top: 50%;
@@ -31,7 +36,36 @@ div + div {
     transform: translate(-50%, -50%);
 }
 
-.add-subreddit > div:hover  {
+.circle:hover  {
+    border-color: gray;
+    color: gray;
+    cursor: pointer;
+}
+
+.reset {
+    flex-shrink: 0;
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 2px solid black;
+    border-radius: 50%;
+    margin: 10px;
+    position: relative;
+    text-align: center;
+    line-height: 50px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.reset::before {
+    content: 'Reset';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.reset:hover  {
     border-color: gray;
     color: gray;
     cursor: pointer;
